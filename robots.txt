@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: *maps.php*
+Disallow: *panorami.php*
+Disallow: *photo.php*
+Disallow: *probki.php*
+Disallow: *vibor-goroda.php*
+Host: gorodina.ru
