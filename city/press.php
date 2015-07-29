@@ -1,7 +1,8 @@
 ﻿<?php
 include ("../block/bd.php");
  $urlka = $_SERVER['REQUEST_URI'];
-
+ $serv_name = 'Cправочники';
+ $api_key = 'rumquq0178';
  if (preg_match ("/([^a-zA-Z0-9\.\/\-\_\#])/", $urlka)) {
 
    header("HTTP/1.0 404 Not Found");
@@ -11,13 +12,37 @@ include ("../block/bd.php");
 
 $urlka = str_replace('/city/', '',$urlka); /* удалил слеш “/” в начале файлы */
 
-
 $result = mysql_query("SELECT * FROM citys WHERE chpu='$urlka'");      
 $myrow = mysql_fetch_array($result);
 
 //Проверяем кол-во заисей в идеале 1, если 0 то страницы не существует
 if (empty($myrow)) {echo "Страницы не сущетвует ";  exit;}
 
+$url_rubrics = "http://catalog.api.2gis.ru/rubricator?key={$api_key}&version=1.3&where={$myrow['name']}";
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url_rubrics);
+curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322)');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+$data = curl_exec($ch);
+$httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+$rubrics = null;
+if ($httpcode>=200 & $httpcode<300) {
+  $api_rubrics = json_decode($data);
+  if ($api_rubrics->response_code != 404) {
+    //Получили список рубрик и обрабатываем
+    $rubric_sql = "INSERT INTO `rubrics`(`id`, `name`, `alias`, `parent_id`, `city`) VALUES ";
+    $rubrics_sql_values = array();
+    foreach ($api_rubrics->result as $rubric) {
+      $rubrics_sql_values[] = "('{$rubric->id}', '{$rubric->name}','{$rubric->alias}','{$rubric->parent_id}', {$myrow['id']})";
+    }
+    $rubric_sql .= join(', ', $rubrics_sql_values) . " ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `alias`=VALUES(`alias`), `parent_id`=VALUES(`parent_id`), `city`={$myrow['id']}";
+    mysql_query($rubric_sql);
+
+  }
+}
 
 ?>
 
@@ -39,6 +64,11 @@ margin:18px;
 padding:10px;
 background-image: url('http://all.ru/im/bg.png');
 
+}
+
+.rubric {
+  margin-top: 3pt;
+  font-size: 10pt;
 }
 </style>
 
@@ -78,6 +108,24 @@ for($i=2;$i<10;$i++) {
 <p align="right">Подробнее...  <a href="/news/<?=$myrow['chpu'];?>">Читать все новости</a></p>
 </div>
 
+<div id="catalog" class="block_water">
+  <div class="h2"><?php echo ($serv_name); ?>: </div>
+  <p>Данные предоставлены <a href="http://2gis.ru" >2ГИС</a></p>
+<?php
+  //Выводим данные о рубриках
+  if (empty ($api_rubrics->result)) {
+    echo "<p>Справочников не найдено</p>";
+  } else {
+    foreach($api_rubrics->result as $rubric) {
+      echo
+      "<div class=\"rubric\">
+        <a href=\"/catalog/{$myrow['chpu']}/{$rubric->alias}\">{$rubric->name}</a>
+      </div> ";
+    }
+  }
+?>
+</div>
+
 <div class="block_water">
 <div class="h2">Фото:</div>
 <p><a href="../photo/<?=$myrow['chpu'];?>">Смотреть фотогалерею города</br><br />
@@ -90,9 +138,7 @@ for($i=2;$i<10;$i++) {
 <img src="../im/panorami.png" /></a></p>
 </div>
 
-<div style="clear:left"> </div>
-
-
+<!--<div style="clear:left"> </div>-->
 
 <div class="block_water">
 <div class="h2">Карта города:</div>
@@ -270,7 +316,7 @@ rabota_print_informer();
 </script>
 <!-- Конец вызова JS-функций -->
 
-<div style="clear:left"> </div>
+<!--<div style="clear:left"> </div>-->
 <div class="block_water">
 <div class="h2">О городе:</div>
 <p align="justify" style="color:#545454; font-size:12px"><?=$myrow['desk'];?></p>

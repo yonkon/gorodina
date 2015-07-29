@@ -1,7 +1,8 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8"/>
 <title>Города России. Карты, панорамы, фото и пробки.</title>
 <meta name="description" content="Путешествие по городам Росии по карте с фото. Панорамы красивейших городов." />
 <meta name="keyword" content="Фото городов россии карта пробки" />
@@ -56,11 +57,11 @@ function init () {
 </script>
 </head>
 <body>
-<? include ("block/header.php");?>
-<? include ("block/nav.php");?>
+<?php include ("block/header.php");?>
+<?php include ("block/nav.php");?>
 <div class="content">
 <h1>Города России:</h1>
- <div class="goroda"><?
+ <div class="goroda"><?php
   include ("block/bd.php");
 	$result3 = mysql_query("SELECT * FROM citys ORDER BY name");
 			if (!$result3)
@@ -156,7 +157,7 @@ function init () {
 </script>
 </div>
 
-<? include ("block/footer.php");?>
+<?php include ("block/footer.php");?>
 		  </div><!-- #content-->
 
 	
