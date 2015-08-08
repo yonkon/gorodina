@@ -18,7 +18,7 @@ $myrow = mysql_fetch_array($result);
 //Проверяем кол-во заисей в идеале 1, если 0 то страницы не существует
 if (empty($myrow)) {echo "Страницы не сущетвует ";  exit;}
 
-$url_rubrics = "http://catalog.api.2gis.ru/rubricator?key={$api_key}&version=1.3&where={$myrow['name']}";
+$url_rubrics = "http://catalog.api.2gis.ru/rubricator?key={$api_key}&version=1.3&where={$myrow['name']}&pagesize=50";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url_rubrics);
 curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; .NET CLR 1.1.4322)');
@@ -71,6 +71,7 @@ background-image: url('http://all.ru/im/bg.png');
   font-size: 10pt;
 }
 </style>
+  <script src="http://catalog.api.2gis.ru/assets/apitracker.js"></script>
 
 </head>
 <body>
@@ -112,7 +113,20 @@ for($i=2;$i<10;$i++) {
   <div class="h2"><?php echo ($serv_name); ?>: </div>
   <p>Данные предоставлены <a href="http://2gis.ru" >2ГИС</a></p>
 <?php
+  //Вывод рекламы если есть
+if (!empty ($api_rubrics->advertising)) {
+  foreach($api_rubrics->advertising as $ad) {
+    echo
+    "<div class=\"rubric advertising\">
+        <input type='hidden' name='hash' value='{$ad->hash}'/>
+        <a href=\"/catalog/{$myrow['chpu']}/{$ad->alias}\">{$ad->title}</a>
+        <p>{$ad->text}</p>
+        <p class=\"fas_warning\">{$ad->fas_warning}</p>
+      </div> ";
+  }
+}
   //Выводим данные о рубриках
+
   if (empty ($api_rubrics->result)) {
     echo "<p>Справочников не найдено</p>";
   } else {

@@ -3,6 +3,7 @@
 error_reporting(-1);*/
 include ("../block/bd.php");
 $thisurl = $_SERVER['REQUEST_URI'];
+$api_key = 'rusmca2171'; // maps.ngs.ru
 $api_key = 'rumquq0178';
 $urlka = str_replace('/catalog/', '',$thisurl); /* удалил слеш “/” в начале файлы */
 $questionMark = strpos($urlka, '?');
@@ -14,6 +15,9 @@ $city_chpu = empty($url_parts[0])?'':$url_parts[0];
 
 $list_msg = '';
 $list_mode = false;
+if ($city_chpu == 'get_profile') {
+  include ('./get_profile.php');
+}
 if (empty($city_chpu) || $city_chpu == 'press.php') {
   $list_mode = true;
   $result3 = mysql_query("SELECT * FROM citys ORDER BY name");
@@ -73,13 +77,15 @@ if (empty($city_chpu) || $city_chpu == 'press.php') {
 
 //Достаём данные с 2ГИС
 //Получаем рубрики
-  $url_rubrics = "http://catalog.api.2gis.ru/rubricator?key={$api_key}&version=1.3&where={$myrow['name']}";
+  $url_rubrics = "http://catalog.api.2gis.ru/rubricator?key={$api_key}&version=1.3&where={$myrow['name']}&pagesize=50";
 //Если указана рубрика
   if($service) {
     //parent_id != 0 - указана подрубрика, значит ищем компании
     if($service['parent_id'] != 0) {
       $companies_mode = true;
-      $url_rubrics = "http://catalog.api.2gis.ru/searchinrubric?key={$api_key}&version=1.3&where={$myrow['name']}&what={$service['name']}";
+      $url_rubrics = "http://catalog.api.2gis.ru/searchinrubric?key={$api_key}&version=1.3&where={$myrow['name']}&what={$service['name']}&pagesize=50";
+//      $url_rubrics = "http://catalog.api.2gis.ru/ads/search?key={$api_key}&version=1.3&where={$myrow['name']}&what={$service['name']}";
+//      $url_rubrics = "http://catalog.api.2gis.ru/search?key={$api_key}&version=1.3&where={$myrow['name']}&what={$service['name']}&pagesize=50";
       if (!empty($_REQUEST['page'])) {
         $url_rubrics .= '&page='.$_REQUEST['page'];
       }
@@ -110,11 +116,16 @@ if (empty($city_chpu) || $city_chpu == 'press.php') {
       //Получили список рубрик и обрабатываем
       $rubric_sql = "INSERT INTO `rubrics`(`id`, `name`, `alias`, `parent_id`, `city`) VALUES ";
       $rubrics_sql_values = array();
-      foreach ($api_rubrics->result as $rubric) {
-        $rubrics_sql_values[] = "('{$rubric->id}', '{$rubric->name}','{$rubric->alias}','{$rubric->parent_id}', {$myrow['id']})";
+      if (!empty($api_rubrics->result)) {
+        foreach ($api_rubrics->result as $rubric) {
+          $rubrics_sql_values[] = "('{$rubric->id}', '{$rubric->name}','{$rubric->alias}','{$rubric->parent_id}', {$myrow['id']})";
+        }
+        $rubric_sql .= join(', ', $rubrics_sql_values) . " ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `alias`=VALUES(`alias`), `parent_id`=VALUES(`parent_id`), `city`={$myrow['id']}";
+        if(!mysql_query($rubric_sql) ) {
+          ;
+          //echo $rubric_sql;
+        }
       }
-      $rubric_sql .= join(', ', $rubrics_sql_values) . " ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `alias`=VALUES(`alias`), `parent_id`=VALUES(`parent_id`), `city`={$myrow['id']}";
-      if(!mysql_query($rubric_sql) ) { echo $rubric_sql; }
     }
   }
 }
@@ -130,7 +141,9 @@ if (empty($city_chpu) || $city_chpu == 'press.php') {
   <link href="/style.css" rel="stylesheet" type="text/css" />
 <link rel="shortcut icon" href="/favicon.ico" />
     <script src="http://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
-    <style>
+  <script src="http://catalog.api.2gis.ru/assets/apitracker.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  <style>
         #map {
             width:595px;
             height:650px;
@@ -173,15 +186,48 @@ function init () {
     var name = company.textContent;
     var myPlacemark = new ymaps.Placemark([lat, lon], { content: name, balloonContent: name });
     myMap.geoObjects.add(myPlacemark);
+    $(company).click(function(e){
+      getProfile(this);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    function getProfile(element) {
+      var id = element.attributes['data-id'].textContent;
+      var firm_id = element.attributes['data-firm_id'].textContent;
+      var hash = element.attributes['data-hash'].textContent;
+      $.ajax({
+        url : '/catalog/get_profile',
+        type : 'post',
+        data : {firm_id : firm_id, id : id, hash : hash}
+//        data : {firm_id : firm_id, hash : hash}
+      }).error(function(e){
+        console.log('2GIS API ERROR');
+        console.log(e);
+      }).success(function(data) {
+        var apires = JSON.parse(data);
+        if (apires.status == 'OK') {
+          $('.profile', $(element).parent()).html(apires.data.html);
+          DG.apitracker.regBC(apires.data.register_bc_url);
+        } else {
+          console.log('2GIS API response status:');
+          console.log(apires.status);
+          console.log(apires.data);
+        }
+      });
+    }
+
   }
 
 
-    document.getElementById('destroyButton').onclick = function () {
+    /*document.getElementById('destroyButton').onclick = function () {
         // Для уничтожения используется метод destroy.
         myMap.destroy();
-    };
+    };*/
+
 
 }
+//DG.apitracker.regBC('http://stat.api.2gis.ru/?v=1.3&hash=a6ffd3544cc0dfe277c3');
 </script>
 
 </head>
@@ -199,6 +245,18 @@ function init () {
   <p>Данные предоставлены <a href="http://2gis.ru" >2ГИС</a></p>
   <?php
   if ($companies_mode) {
+    //Вывод рекламы если есть
+    if (!empty ($api_rubrics->advertising)) {
+      foreach($api_rubrics->advertising as $ad) {
+        echo
+        "<div class=\"company advertising\">
+        <a href=\"#\" class=\"name\" data-firm_id=\"{$ad->firm_id}\" data-hash=\"{$ad->hash}\">{$ad->title}</a>
+        <p>{$ad->text}</p>
+        <p class=\"fas_warning\">{$ad->fas_warning}</p>
+        <div class='profile'></div>
+      </div> ";
+      }
+    }
     //Выводим данные о компаниях
     if (empty ($api_rubrics->result)) {
       echo "<p>Компаний не найдено</p>";
@@ -207,9 +265,23 @@ function init () {
       foreach($api_rubrics->result as $company) {
         ?>
       <div class="company">
-        <p class="name" data-lat="<?php echo ($company->lat); ?>"
-           data-lon="<?php echo ($company->lon); ?>">
-          <?php echo ($company->name); ?></p>
+        <a href="#"
+           class="name"
+           data-id="<?php echo ($company->id);?>"
+           data-firm_id="<?php echo ($company->firm_group->id);?>"
+           data-lat="<?php echo ($company->lat); ?>"
+           data-lon="<?php echo ($company->lon); ?>"
+           data-hash="<?php echo ($company->hash);?>"
+          >
+          <?php echo ($company->name); ?></a>
+        <?php
+        if (!empty($company->micro_comment)) {
+          echo "<p class='micro_comment'>{$company->micro_comment}</p>";
+        }
+        if (!empty($company->fas_warning)) {
+          echo "<p class='fas_warning'>{$company->fas_warning}</p>";
+        }
+        ?>
         <p><?php echo ($company->city_name); ?>,
           <?php echo ($company->address); ?></p>
         <p>
@@ -220,8 +292,10 @@ function init () {
   <a href=\"/catalog/{$city_chpu}?rubric={$com_rubric}\">{$com_rubric}</a>
  </span>";
           }
+
           ?>
         </p>
+        <div class='profile'></div>
       </div>
   <?php
       }
@@ -351,6 +425,5 @@ for($i=2;$i<10;$i++) {
 <div style="clear:left"> </div>
 </div>
 <?php include ("../block/footer.php");?>
-
 </body>
 </html>
