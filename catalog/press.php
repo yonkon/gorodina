@@ -1,9 +1,7 @@
 ﻿<?php
-/*ini_set('display_errors', 1);
-error_reporting(-1);*/
 include ("../block/bd.php");
 $thisurl = $_SERVER['REQUEST_URI'];
-$api_key = 'rusmca2171'; // maps.ngs.ru
+//$api_key = 'rusmca2171'; // maps.ngs.ru
 $api_key = 'rumquq0178';
 $urlka = str_replace('/catalog/', '',$thisurl); /* удалил слеш “/” в начале файлы */
 $questionMark = strpos($urlka, '?');
@@ -136,99 +134,90 @@ if (empty($city_chpu) || $city_chpu == 'press.php') {
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <?php include('./meta.php'); ?>
   <link href="/style.css" rel="stylesheet" type="text/css" />
-<link rel="shortcut icon" href="/favicon.ico" />
-    <script src="http://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <script src="http://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
   <script src="http://catalog.api.2gis.ru/assets/apitracker.js"></script>
   <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
   <style>
-        #map {
-            width:595px;
-            height:650px;
-        }
-        .company {
-          padding: 8pt;
-          border-bottom: 1px solid rgba(199, 155, 155, 0.5);
-        }
+    #map {
+      width:595px;
+      height:650px;
+    }
+    .company {
+      padding: 8pt;
+      border-bottom: 1px solid rgba(199, 155, 155, 0.5);
+    }
 
-        .company.name {
-          font-size: 14pt;
-        }
+    .company.name {
+      font-size: 14pt;
+    }
 
-      .rubric {
-        margin-bottom: 3pt;
-      }
-    </style>
+    .rubric {
+      margin-bottom: 3pt;
+    }
+  </style>
 
-<script type="text/javascript">
-var myMap;
+  <script type="text/javascript">
+    var myMap;
 
-// Дождёмся загрузки API и готовности DOM.
-ymaps.ready(init);
+    // Дождёмся загрузки API и готовности DOM.
+    ymaps.ready(init);
 
-function init () {
-    // Создание экземпляра карты и его привязка к контейнеру с
-    // заданным id ("map").
-    myMap = new ymaps.Map('map', {
+    function init () {
+      // Создание экземпляра карты и его привязка к контейнеру с
+      // заданным id ("map").
+      myMap = new ymaps.Map('map', {
         // При инициализации карты обязательно нужно указать
         // её центр и коэффициент масштабирования.
         center: [<?php echo ($myrow['kor2']); ?>, <?php echo ($myrow['kor1']); ?>], // Москва
         zoom: 12
-    });
-  var companies = document.querySelectorAll('.company .name');
-  for (var c in companies) {
-    if (!companies.hasOwnProperty(c)) continue;
-    var company = companies[c];
-    var lat = company.attributes['data-lat'].textContent;
-    var lon = company.attributes['data-lon'].textContent;
-    var name = company.textContent;
-    var myPlacemark = new ymaps.Placemark([lat, lon], { content: name, balloonContent: name });
-    myMap.geoObjects.add(myPlacemark);
-    $(company).click(function(e){
-      getProfile(this);
-      e.preventDefault();
-      e.stopPropagation();
-    });
-
-    function getProfile(element) {
-      var id = element.attributes['data-id'].textContent;
-      var firm_id = element.attributes['data-firm_id'].textContent;
-      var hash = element.attributes['data-hash'].textContent;
-      $.ajax({
-        url : '/catalog/get_profile',
-        type : 'post',
-        data : {firm_id : firm_id, id : id, hash : hash}
-//        data : {firm_id : firm_id, hash : hash}
-      }).error(function(e){
-        console.log('2GIS API ERROR');
-        console.log(e);
-      }).success(function(data) {
-        var apires = JSON.parse(data);
-        if (apires.status == 'OK') {
-          $('.profile', $(element).parent()).html(apires.data.html);
-          DG.apitracker.regBC(apires.data.register_bc_url);
-        } else {
-          console.log('2GIS API response status:');
-          console.log(apires.status);
-          console.log(apires.data);
-        }
       });
+      var companies = document.querySelectorAll('.company .name');
+      for (var c in companies) {
+        if (!companies.hasOwnProperty(c)) continue;
+        var company = companies[c];
+        var lat = company.attributes['data-lat'].textContent;
+        var lon = company.attributes['data-lon'].textContent;
+        var name = company.textContent;
+        var myPlacemark = new ymaps.Placemark([lat, lon], { content: name, balloonContent: name });
+        myMap.geoObjects.add(myPlacemark);
+        $(company).click(function(e){
+          getProfile(this);
+          e.preventDefault();
+          e.stopPropagation();
+        });
+
+        function getProfile(element) {
+          var id = element.attributes['data-id'].textContent;
+          var firm_id = element.attributes['data-firm_id'].textContent;
+          var hash = element.attributes['data-hash'].textContent;
+          $.ajax({
+            url : '/catalog/get_profile',
+            type : 'post',
+            data : {firm_id : firm_id, id : id, hash : hash}
+//        data : {firm_id : firm_id, hash : hash}
+          }).error(function(e){
+            console.log('2GIS API ERROR');
+            console.log(e);
+          }).success(function(data) {
+            var apires = JSON.parse(data);
+            if (apires.status == 'OK') {
+              $('.profile', $(element).parent()).html(apires.data.html);
+              DG.apitracker.regBC(apires.data.register_bc_url);
+            } else {
+              console.log('2GIS API response status:');
+              console.log(apires.status);
+              console.log(apires.data);
+            }
+          });
+        }
+
+      }
     }
-
-  }
-
-
-    /*document.getElementById('destroyButton').onclick = function () {
-        // Для уничтожения используется метод destroy.
-        myMap.destroy();
-    };*/
-
-
-}
-//DG.apitracker.regBC('http://stat.api.2gis.ru/?v=1.3&hash=a6ffd3544cc0dfe277c3');
-</script>
+  </script>
 
 </head>
 <body>
@@ -236,193 +225,193 @@ function init () {
 <?php include ("../block/nav.php");?>
 <div class="content">
 
-<div class="block_main">
-  <?php if($list_mode) {
-    echo $list_msg;
-  } else {?>
-<h1><?php echo ($serv_name); ?></h1>
-<div id="catalog">
-  <p>Данные предоставлены <a href="http://2gis.ru" >2ГИС</a></p>
-  <?php
-  if ($companies_mode) {
-    //Вывод рекламы если есть
-    if (!empty ($api_rubrics->advertising)) {
-      foreach($api_rubrics->advertising as $ad) {
-        echo
-        "<div class=\"company advertising\">
+  <div class="block_main">
+    <?php if($list_mode) {
+      echo $list_msg;
+    } else {?>
+      <h1><?php echo ($serv_name); ?></h1>
+      <div id="catalog">
+        <p><a href="http://2gis.ru" >Данные предоставлены 2ГИС</a></p>
+        <?php
+        if ($companies_mode) {
+          //Вывод рекламы если есть
+          if (!empty ($api_rubrics->advertising)) {
+            foreach($api_rubrics->advertising as $ad) {
+              echo
+              "<div class=\"company advertising\">
         <a href=\"#\" class=\"name\" data-firm_id=\"{$ad->firm_id}\" data-hash=\"{$ad->hash}\">{$ad->title}</a>
         <p>{$ad->text}</p>
         <p class=\"fas_warning\">{$ad->fas_warning}</p>
         <div class='profile'></div>
       </div> ";
-      }
-    }
-    //Выводим данные о компаниях
-    if (empty ($api_rubrics->result)) {
-      echo "<p>Компаний не найдено</p>";
-      echo "<a href=\"/catalog/{$city_chpu}\">Назад к справочникам</a>";
-    } else {
-      foreach($api_rubrics->result as $company) {
-        ?>
-      <div class="company">
-        <a href="#"
-           class="name"
-           data-id="<?php echo ($company->id);?>"
-           data-firm_id="<?php echo ($company->firm_group->id);?>"
-           data-lat="<?php echo ($company->lat); ?>"
-           data-lon="<?php echo ($company->lon); ?>"
-           data-hash="<?php echo ($company->hash);?>"
-          >
-          <?php echo ($company->name); ?></a>
-        <?php
-        if (!empty($company->micro_comment)) {
-          echo "<p class='micro_comment'>{$company->micro_comment}</p>";
-        }
-        if (!empty($company->fas_warning)) {
-          echo "<p class='fas_warning'>{$company->fas_warning}</p>";
-        }
-        ?>
-        <p><?php echo ($company->city_name); ?>,
-          <?php echo ($company->address); ?></p>
-        <p>
-          <?php
-          foreach($company->rubrics as $com_rubric) {
-            echo
-"<span class=\"company_rubric\">
+            }
+          }
+          //Выводим данные о компаниях
+          if (empty ($api_rubrics->result)) {
+            echo "<p>Компаний не найдено</p>";
+            echo "<a href=\"/catalog/{$city_chpu}\">Назад к справочникам</a>";
+          } else {
+            foreach($api_rubrics->result as $company) {
+              ?>
+              <div class="company">
+                <a href="#"
+                   class="name"
+                   data-id="<?php echo ($company->id);?>"
+                   data-firm_id="<?php echo ($company->firm_group->id);?>"
+                   data-lat="<?php echo ($company->lat); ?>"
+                   data-lon="<?php echo ($company->lon); ?>"
+                   data-hash="<?php echo ($company->hash);?>"
+                    >
+                  <?php echo ($company->name); ?></a>
+                <?php
+                if (!empty($company->micro_comment)) {
+                  echo "<p class='micro_comment'>{$company->micro_comment}</p>";
+                }
+                if (!empty($company->fas_warning)) {
+                  echo "<p class='fas_warning'>{$company->fas_warning}</p>";
+                }
+                ?>
+                <p><?php echo ($company->city_name); ?>,
+                  <?php echo ($company->address); ?></p>
+                <p>
+                  <?php
+                  foreach($company->rubrics as $com_rubric) {
+                    echo
+                    "<span class=\"company_rubric\">
   <a href=\"/catalog/{$city_chpu}?rubric={$com_rubric}\">{$com_rubric}</a>
  </span>";
-          }
+                  }
 
-          ?>
-        </p>
-        <div class='profile'></div>
-      </div>
-  <?php
-      }
-    }
-  } else {
-    //Выводим данные о рубриках
-    if (empty ($api_rubrics->result)) {
-      echo "<p>Подрубрик не найдено</p>";
-      echo "<a href=\"/catalog/{$city_chpu}\">Назад к справочникам</a>";
-    } else {
-      foreach($api_rubrics->result as $rubric) {
-        echo
-        "<div class=\"rubric\">
+                  ?>
+                </p>
+                <div class='profile'></div>
+              </div>
+              <?php
+            }
+          }
+        } else {
+          //Выводим данные о рубриках
+          if (empty ($api_rubrics->result)) {
+            echo "<p>Подрубрик не найдено</p>";
+            echo "<a href=\"/catalog/{$city_chpu}\">Назад к справочникам</a>";
+          } else {
+            foreach($api_rubrics->result as $rubric) {
+              echo
+              "<div class=\"rubric\">
         <a href=\"/catalog/{$city_chpu}/{$rubric->alias}\">{$rubric->name}</a>
       </div> ";
-      }
+            }
+          }
+        }
+
+        ?>
+      </div>
+      <div id="map"></div>
+      <?php
     }
-  }
+    ?>
+  </div>
 
-  ?>
-</div>
-<div id="map"></div>
-  <?php
-  }
-  ?>
-</div>
+  <div class="block_mwater">
+    <div align="center"><a href="/city/<?php echo ($myrow['chpu']); ?>"><div class="h2">Городской сайт</div>
+        <img width="120px" align="center" height="150px" align="left" src="/im/logo/<?php echo ($myrow['chpu']); ?>.png" /></div></a>
+  </div>
 
-<div class="block_mwater">
- <div align="center"><a href="/city/<?php echo ($myrow['chpu']); ?>"><div class="h2">Городской сайт</div>
-<img width="120px" align="center" height="150px" align="left" src="/im/logo/<?php echo ($myrow['chpu']); ?>.png" /></div></a>
-</div>
+  <div class="block_mwater">
 
-<div class="block_mwater">
+    <div class="h2">Показать на карте <?php echo ($myrow['rpadej']); ?>:</div>
+    <td>
+      <a href="/avtomoyka/<?php echo ($myrow['chpu']); ?>">Автомойки</a><br />
+      <a href="/sto/<?php echo ($myrow['chpu']); ?>">Автосервисы</a><br />
+      <a href="/parking/<?php echo ($myrow['chpu']); ?>">Автопарковки</a><br />
+      <!--Аэропорт<br />
+      Банкомат<br />
+      Банк<br />
+      Бар<br />
+      Автовокзал<br />
+      Кафе<br />
+      Железнодорожная станция<br />
+      Почта<br />
+      Ресторан<br />
+      Стоянка такси<br />
+      Церковь<br />
+      Суд<br />
+      Посольство<br />
+      Автозаправочная станция<br />
+      Больница<br />
+      Мечеть<br />
+      Кинотеатр<br />
+      Зоопарк<br />
+      Музей<br />
+      Ночной клуб<br />
+      Парк<br />
+      Аптека<br />
+      Полиция<br />-->
+  </div>
+  <noindex>
 
-<div class="h2">Показать на карте <?php echo ($myrow['rpadej']); ?>:</div>
-	<td>
-	<a href="/avtomoyka/<?php echo ($myrow['chpu']); ?>">Автомойки</a><br />
-	<a href="/sto/<?php echo ($myrow['chpu']); ?>">Автосервисы</a><br />
-	<a href="/parking/<?php echo ($myrow['chpu']); ?>">Автопарковки</a><br />
-<!--Аэропорт<br />
-Банкомат<br />
-Банк<br />
-Бар<br />
-Автовокзал<br />
-Кафе<br />
-Железнодорожная станция<br />
-Почта<br />
-Ресторан<br />
-Стоянка такси<br />
-Церковь<br />
-Суд<br />
-Посольство<br />
-Автозаправочная станция<br />
-Больница<br />
-Мечеть<br />
-Кинотеатр<br />
-Зоопарк<br />
-Музей<br />
-Ночной клуб<br />
-Парк<br />
-Аптека<br />
-Полиция<br />-->
-</div>
-<noindex>
+    <div class="block_mwater">
+      <div class="h2">Фото:</div>
+      <p><a href="/photo/<?php echo ($myrow['chpu']); ?>">Смотреть фото города</br>
+          <img width="260px" height="110px" src="/im/pncity/<?php echo ($myrow['chpu']); ?>.jpg" /></a></p>
 
-<div class="block_mwater">
-<div class="h2">Фото:</div>
-<p><a href="/photo/<?php echo ($myrow['chpu']); ?>">Смотреть фото города</br>
-<img width="260px" height="110px" src="/im/pncity/<?php echo ($myrow['chpu']); ?>.jpg" /></a></p>
+      </br>
 
-</br>
+      <p><a href="/panoram/<?php echo ($myrow['chpu']); ?>">
+          Смотреть панораму города:</br>
+          <img width="260px"  height="60px" src="/im/panorami.png" /></a></p>
+    </div>
 
-<p><a href="/panoram/<?php echo ($myrow['chpu']); ?>">
-Смотреть панораму города:</br>
-<img width="260px"  height="60px" src="/im/panorami.png" /></a></p>
-</div>
+    <div class="block_mwater">
+      <div class="h2">Погода</div>
+      <div align="center"><img  src="//info.weather.yandex.net/<?php echo ($myrow['news']); ?>/2.ru.png?domain=ru" border="0" alt="Яндекс.Погода"/><img width="1" height="1" src="https://clck.yandex.ru/click/dtype=stred/pid=7/cid=1227/*https://img.yandex.ru/i/pix.gif" alt="" border="0"/> </div>
+    </div>
+    <div class="block_mwater">
+      <div class="h2">Пробки:</div>
+      <div align="center"><a href="/probki/<?php echo ($myrow['chpu']); ?>">Узнать пробки
+          <img src="/im/probki.jpg"/>
+        </a></div>
+    </div>
+  </noindex>
 
-<div class="block_mwater">
- <div class="h2">Погода</div>
-<div align="center"><img  src="//info.weather.yandex.net/<?php echo ($myrow['news']); ?>/2.ru.png?domain=ru" border="0" alt="Яндекс.Погода"/><img width="1" height="1" src="https://clck.yandex.ru/click/dtype=stred/pid=7/cid=1227/*https://img.yandex.ru/i/pix.gif" alt="" border="0"/> </div>
-</div>
-<div class="block_mwater">
-<div class="h2">Пробки:</div>
- <div align="center"><a href="/probki/<?php echo ($myrow['chpu']); ?>">Узнать пробки
- <img src="/im/probki.jpg"/>
- </a></div>
-</div>
-</noindex>
+  <div class="block_mwater">
+    <div class="h2">О городе:</div>
+    <p align="justify" style="color:#545454; font-size:12px"><?php echo ($myrow['desk']); ?></p>
+  </div>
+  <div style="clear:left"> </div>
 
-<div class="block_mwater">
-<div class="h2">О городе:</div>
-<p align="justify" style="color:#545454; font-size:12px"><?php echo ($myrow['desk']); ?></p>
-</div>
-<div style="clear:left"> </div>
+  <noindex>
 
-<noindex>
+    <div class="block_mwater">
+      <div class="h2">Новости:</div>
+      <?php
 
-<div class="block_mwater">
-<div class="h2">Новости:</div>
-<?php
+      $url = "http://news.yandex.ru/".$myrow['news']."/index.rss";
+      $content = file_get_contents($url);
 
- $url = "http://news.yandex.ru/".$myrow['news']."/index.rss";
- $content = file_get_contents($url);
+      $patern_titl = "|<title>(.*?)</title>|is";
+      $patern_link = "|<link>(.*?)</link>|is";
+      $patern_description = "|<description>(.*?)</description>|is";
 
- $patern_titl = "|<title>(.*?)</title>|is";
- $patern_link = "|<link>(.*?)</link>|is";
- $patern_description = "|<description>(.*?)</description>|is";
+      preg_match_all($patern_titl,$content,$titl);
 
-  preg_match_all($patern_titl,$content,$titl);
- 
-  preg_match_all($patern_link,$content,$link);
- 
-  preg_match_all($patern_description,$content,$description);
- 
+      preg_match_all($patern_link,$content,$link);
 
-for($i=2;$i<10;$i++) {
-   
-   echo "<p> – ".$titl[1][$i]."</p> <br />";
-	
-   }
+      preg_match_all($patern_description,$content,$description);
 
 
-?>
-<p align="right">Подробнее...  <a href="/news/<?php echo ($myrow['chpu']); ?>">Читать все новости</a></p>
-</div>
-</noindex>
-<div style="clear:left"> </div>
+      for($i=2;$i<10;$i++) {
+
+        echo "<p> – ".$titl[1][$i]."</p> <br />";
+
+      }
+
+
+      ?>
+      <p align="right">Подробнее...  <a href="/news/<?php echo ($myrow['chpu']); ?>">Читать все новости</a></p>
+    </div>
+  </noindex>
+  <div style="clear:left"> </div>
 </div>
 <?php include ("../block/footer.php");?>
 </body>

@@ -143,3 +143,30 @@ padding:10px;
 background:#fffffd;
 
 }
+
+.gis-btn {
+    display: inline-block;
+    border: 1px outset lightgray;
+    padding: 6px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+    border-radius: 4px;
+    color: #333;
+    background-color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.gis-btn:hover {
+    background-color: #e6e6e6;
+    border-color: #adadad;
+}
